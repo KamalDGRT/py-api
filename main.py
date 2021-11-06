@@ -20,6 +20,20 @@ class Post(BaseModel):
     rating: Optional[int] = None
 
 
+my_posts = [
+    {
+        "title": "title of post 1",
+        "content": "content of post 1",
+        "id": 1
+    },
+    {
+        "title": "favorite foods",
+        "content": "I like pizza",
+        "id": 2
+    }
+]
+
+
 app = FastAPI()
 
 
@@ -28,16 +42,8 @@ async def root():
     return {"message": "Hello World"}
 
 
-# This is the content that I gave in the Body -> Raw -> JSON in the Postman
-#  Feel free to test out with vallues of different types.
-# {
-#     "title": "Yii2 Framework",
-#     "content": "Yii2 is one of the top 5 PHP Frameworks",
-#     "rating": 4
-# }
-@app.post('/createpost')
-def create_post(post: Post):
-    post.dict()   # Converts a pydantic model to a dictionary
+@app.post('/posts')
+def get_posts():
     return {
-        "data": post
+        "data": my_posts
     }
