@@ -40,10 +40,12 @@ def find_post(id):
         if post['id'] == id:
             return post
 
+
 def find_index_post(id):
     for index, post in enumerate(my_posts):
         if post['id'] == id:
             return index
+
 
 app = FastAPI()
 
@@ -79,6 +81,7 @@ def get_post(id: int):
         "post_detail": post
     }
 
+
 @app.delete('/post/delete/{id}', status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int):
     # find the index in the array that has the required id
@@ -86,6 +89,25 @@ def delete_post(id: int):
     index = find_index_post(id)
     if index is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-        detail=f"Post with id: {id} does not exist!")
+                            detail=f"Post with id: {id} does not exist!")
+
     my_posts.pop(index)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+# make sure to add some body in the postman to check it.
+@app.put('/post/update/{id}')
+def update_post(id: int, post: Post):
+    index = find_index_post(id)
+
+    if index is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Post with id: {id} does not exist!")
+
+    post_dict = post.dict()  # take all data from frotend
+    post_dict['id'] = id   # add the id
+    my_posts[index] = post_dict  # updating the post in the array using index
+
+    return {
+        'data': post_dict
+    }
