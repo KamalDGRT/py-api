@@ -1,6 +1,6 @@
 # https://fastapi.tiangolo.com/tutorial/first-steps/
 
-from fastapi import FastAPI
+from fastapi import FastAPI, status, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 from random import randrange
@@ -35,6 +35,12 @@ my_posts = [
 ]
 
 
+def find_post(id):
+    for post in my_posts:
+        if post['id'] == id:
+            return post
+
+
 app = FastAPI()
 
 
@@ -50,9 +56,21 @@ def get_posts():
     }
 
 
-@app.post('/post/create')
+@app.post('/post/create', status_code=status.HTTP_201_CREATED)
 def create_post(post: Post):
     post_dict = post.dict()
     post_dict['id'] = randrange(0, 10000000)
     my_posts.append(post_dict)
     return {"data": post_dict}
+
+
+# {id} is a path parameter
+@app.get('/post/{id}')
+def get_post(id: int):
+    post = find_post(id)
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Post with id: {id} not found!")
+    return {
+        "post_detail": post
+    }
