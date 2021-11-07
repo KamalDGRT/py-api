@@ -1,6 +1,6 @@
 # https://fastapi.tiangolo.com/tutorial/first-steps/
 
-from fastapi import FastAPI, status, HTTPException
+from fastapi import FastAPI, status, HTTPException, Response
 from pydantic import BaseModel
 from typing import Optional
 from random import randrange
@@ -40,6 +40,10 @@ def find_post(id):
         if post['id'] == id:
             return post
 
+def find_index_post(id):
+    for index, post in enumerate(my_posts):
+        if post['id'] == id:
+            return index
 
 app = FastAPI()
 
@@ -74,3 +78,14 @@ def get_post(id: int):
     return {
         "post_detail": post
     }
+
+@app.delete('/post/delete/{id}', status_code=status.HTTP_204_NO_CONTENT)
+def delete_post(id: int):
+    # find the index in the array that has the required id
+    # my_posts.pop(index)
+    index = find_index_post(id)
+    if index is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"Post with id: {id} does not exist!")
+    my_posts.pop(index)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
