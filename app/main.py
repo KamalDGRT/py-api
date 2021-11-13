@@ -120,35 +120,40 @@ def get_post(id: int):
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Post with id: {id} not found!")
-    return { "post_detail": post }
+    return {"post_detail": post}
 
 
 @app.delete('/post/delete/{id}', status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int):
-    # find the index in the array that has the required id
-    # my_posts.pop(index)
-    index = find_index_post(id)
-    if index is None:
+    cursor.execute(
+        """ DELETE FROM posts WHERE id = %s RETURNING * """,
+        (str(id), )
+    )
+    deleted_post = cursor.fetchone()
+    conn.commit()
+
+    if deleted_post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Post with id: {id} does not exist!")
 
-    my_posts.pop(index)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 # make sure to add some body in the postman to check it.
 @app.put('/post/update/{id}')
 def update_post(id: int, post: Post):
-    index = find_index_post(id)
 
-    if index is None:
+    cursor.execute(
+        """UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING * """,
+        (post.title, post.content, post.published, str(id))
+    )
+    updated_post = cursor.fetchone()
+    conn.commit()
+
+    if updated_post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Post with id: {id} does not exist!")
 
-    post_dict = post.dict()  # take all data from frotend
-    post_dict['id'] = id   # add the id
-    my_posts[index] = post_dict  # updating the post in the array using index
-
     return {
-        'data': post_dict
+        'data': updated_post
     }
