@@ -1,9 +1,13 @@
 # https://fastapi.tiangolo.com/tutorial/first-steps/
+# How to run the code: uvicorn app.main:app --reload
 
 from fastapi import FastAPI, status, HTTPException, Response
 from pydantic import BaseModel
 from typing import Optional
 from random import randrange
+import psycopg2 as pg
+from psycopg2.extras import RealDictCursor
+import time
 
 
 class Post(BaseModel):
@@ -18,7 +22,26 @@ class Post(BaseModel):
     title: str
     content: str
     published: bool = True
-    rating: Optional[int] = None
+
+
+# Looping till we get a connection and breaking out of it
+# once the connection is established.
+while True:
+    try:
+        conn = pg.connect(
+            host='localhost',
+            database='py_api',
+            user='postgres',
+            password='',
+            cursor_factory=RealDictCursor
+        )
+        cursor = conn.cursor()
+        print("Database connection was successfull!")
+        break
+    except Exception as error:
+        print('Connection to the database failed!')
+        print('Error: ', error)
+        time.sleep(2)
 
 
 my_posts = [
@@ -57,17 +80,25 @@ async def root():
 
 @app.get('/posts')
 def get_posts():
+    cursor.execute("""SELECT * FROM posts""")
+    posts = cursor.fetchall()
     return {
-        "data": my_posts
+        "data": posts
     }
 
 
 @app.post('/post/create', status_code=status.HTTP_201_CREATED)
 def create_post(post: Post):
-    post_dict = post.dict()
-    post_dict['id'] = randrange(0, 10000000)
-    my_posts.append(post_dict)
-    return {"data": post_dict}
+    """
+    Inserting a new post into the database
+    """
+    cursor.execute(
+        """INSERT into posts (title, content, published) VALUES (%s, %s, %s) RETURNING * """,
+        (post.title, post.content, post.published)
+    )
+    new_post = cursor.fetchone()
+    conn.commit()
+    return {"data": new_post}
 
 
 # {id} is a path parameter
