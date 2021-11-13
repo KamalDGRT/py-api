@@ -101,16 +101,26 @@ def create_post(post: Post):
     return {"data": new_post}
 
 
-# {id} is a path parameter
 @app.get('/post/{id}')
 def get_post(id: int):
-    post = find_post(id)
+    """ 
+    {id} is a path parameter
+    """
+    cursor.execute(""" SELECT * FROM posts WHERE id = %s """, (str(id), ))
+    # We are
+    # - taking an string from the parameter
+    # - converting it to int
+    # - then again converting it to str
+    # We are doing this because we want to valid that the user is giving
+    # only integers in the argument and not string like `adfadf`.
+    # Plus we are adding a comma after the str(id) because we run into an
+    # error later. Don't know the reason for the error yet.
+    post = cursor.fetchone()
+
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Post with id: {id} not found!")
-    return {
-        "post_detail": post
-    }
+    return { "post_detail": post }
 
 
 @app.delete('/post/delete/{id}', status_code=status.HTTP_204_NO_CONTENT)
