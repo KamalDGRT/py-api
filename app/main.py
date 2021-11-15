@@ -1,13 +1,22 @@
 # https://fastapi.tiangolo.com/tutorial/first-steps/
 # How to run the code: uvicorn app.main:app --reload
 
-from fastapi import FastAPI, status, HTTPException, Response
+from . import models
+from .database import engine, get_db
+
+from random import randrange
+import time
+
+from fastapi import FastAPI, status, HTTPException, Response, Depends
 from pydantic import BaseModel
 from typing import Optional
-from random import randrange
 import psycopg2 as pg
 from psycopg2.extras import RealDictCursor
-import time
+from sqlalchemy.orm import Session
+
+models.Base.metadata.create_all(bind=engine)
+
+app = FastAPI()
 
 
 class Post(BaseModel):
@@ -70,12 +79,14 @@ def find_index_post(id):
             return index
 
 
-app = FastAPI()
-
-
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
+
+
+@app.get('/sqlachemy')
+def test_post(db: Session = Depends(get_db)):
+    return {"status": "success"}
 
 
 @app.get('/posts')
