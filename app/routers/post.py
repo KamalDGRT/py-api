@@ -1,13 +1,15 @@
 from fastapi import status, HTTPException, Response, Depends, APIRouter
 from typing import List
 from sqlalchemy.orm import Session
+
 from ..database import get_db
-from .. import models, schemas
+from .. import models, schemas, oauth2
 
 router = APIRouter(
     prefix='/posts',
     tags=['Posts']
 )
+
 
 @router.get('/', response_model=List[schemas.Post])
 def get_posts(db: Session = Depends(get_db)):
@@ -17,8 +19,16 @@ def get_posts(db: Session = Depends(get_db)):
     return posts
 
 
-@router.post('/create', status_code=status.HTTP_201_CREATED, response_model=schemas.Post)
-def create_post(post: schemas.PostCreate, db: Session = Depends(get_db)):
+@router.post(
+    '/create',
+    status_code=status.HTTP_201_CREATED,
+    response_model=schemas.Post
+)
+def create_post(
+    post: schemas.PostCreate,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(oauth2.get_current_user)
+):
     """
     Inserting a new post into the database
     """
@@ -28,6 +38,7 @@ def create_post(post: schemas.PostCreate, db: Session = Depends(get_db)):
     # )
     # new_post = cursor.fetchone()
     # conn.commit()
+    print(user_id)
     new_post = models.Post(
         **post.dict()
     )
@@ -42,8 +53,15 @@ def create_post(post: schemas.PostCreate, db: Session = Depends(get_db)):
     return new_post
 
 
-@router.get('/{id}', response_model=schemas.Post)
-def get_post(id: int, db: Session = Depends(get_db)):
+@router.get(
+    '/{id}',
+    response_model=schemas.Post
+)
+def get_post(
+    id: int,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(oauth2.get_current_user)
+):
     """ 
     {id} is a path parameter
     """
@@ -66,8 +84,15 @@ def get_post(id: int, db: Session = Depends(get_db)):
     return post
 
 
-@router.delete('/delete/{id}', status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int, db: Session = Depends(get_db)):
+@router.delete(
+    '/delete/{id}',
+    status_code=status.HTTP_204_NO_CONTENT
+)
+def delete_post(
+    id: int,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(oauth2.get_current_user)
+):
     # cursor.execute(
     #     """ DELETE FROM posts WHERE id = %s RETURNING * """,
     #     (str(id), )
@@ -88,8 +113,16 @@ def delete_post(id: int, db: Session = Depends(get_db)):
 
 
 # make sure to add some body in the postman to check it.
-@router.put('/update/{id}', response_model=schemas.Post)
-def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends(get_db)):
+@router.put(
+    '/update/{id}',
+    response_model=schemas.Post
+)
+def update_post(
+    id: int,
+    updated_post: schemas.PostCreate,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(oauth2.get_current_user)
+):
 
     # cursor.execute(
     #     """UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING * """,
