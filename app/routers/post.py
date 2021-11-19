@@ -12,7 +12,10 @@ router = APIRouter(
 
 
 @router.get('/', response_model=List[schemas.Post])
-def get_posts(db: Session = Depends(get_db)):
+def get_posts(
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user)
+):
     # cursor.execute("""SELECT * FROM posts""")
     # posts = cursor.fetchall()
     posts = db.query(models.Post).all()
@@ -27,19 +30,21 @@ def get_posts(db: Session = Depends(get_db)):
 def create_post(
     post: schemas.PostCreate,
     db: Session = Depends(get_db),
-    user_id: int = Depends(oauth2.get_current_user)
+    current_user: int = Depends(oauth2.get_current_user)
 ):
     """
     Inserting a new post into the database
     """
+    # Line 30: forces user to be logged in before they can create a post.
     # cursor.execute(
     #     """INSERT into posts (title, content, published) VALUES (%s, %s, %s) RETURNING * """,
     #     (post.title, post.content, post.published)
     # )
     # new_post = cursor.fetchone()
     # conn.commit()
-    print(user_id)
+    print(current_user.id)
     new_post = models.Post(
+        owner_id=current_user.id,
         **post.dict()
     )
     # ** unpacks the dictionary into this format:
@@ -60,7 +65,7 @@ def create_post(
 def get_post(
     id: int,
     db: Session = Depends(get_db),
-    user_id: int = Depends(oauth2.get_current_user)
+    current_user: int = Depends(oauth2.get_current_user)
 ):
     """ 
     {id} is a path parameter
@@ -91,7 +96,7 @@ def get_post(
 def delete_post(
     id: int,
     db: Session = Depends(get_db),
-    user_id: int = Depends(oauth2.get_current_user)
+    current_user: int = Depends(oauth2.get_current_user)
 ):
     # cursor.execute(
     #     """ DELETE FROM posts WHERE id = %s RETURNING * """,
@@ -121,7 +126,7 @@ def update_post(
     id: int,
     updated_post: schemas.PostCreate,
     db: Session = Depends(get_db),
-    user_id: int = Depends(oauth2.get_current_user)
+    current_user: int = Depends(oauth2.get_current_user)
 ):
 
     # cursor.execute(
