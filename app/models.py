@@ -1,5 +1,6 @@
 # Every model represents a table in our database.
 
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql.schema import ForeignKey
 from .database import Base
 from sqlalchemy import Column, Integer, String, Boolean
@@ -24,6 +25,12 @@ class Post(Base):
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False
     )
+
+    # This is gonna create another property for us for our posts
+    # so that when we retrieve our posts, it will fetch the owner
+    # based on the owner_id and return that for us.
+    owner = relationship("User")
+
 
 class User(Base):
     __tablename__ = "users"
