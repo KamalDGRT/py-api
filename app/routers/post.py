@@ -1,5 +1,6 @@
 from fastapi import status, HTTPException, Response, Depends, APIRouter
 from typing import List, Optional
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -11,7 +12,8 @@ router = APIRouter(
 )
 
 
-@router.get('/', response_model=List[schemas.Post])
+@router.get('/', response_model=List[schemas.PostOut])
+# @router.get('/')
 def get_posts(
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
@@ -22,10 +24,26 @@ def get_posts(
     # cursor.execute("""SELECT * FROM posts""")
     # posts = cursor.fetchall()
 
-    posts = db.query(models.Post) \
-    .filter(models.Post.title.contains(search)) \
-    .limit(limit).offset(skip).all()
-    return posts
+    # posts = db.query(models.Post) \
+    # .filter(models.Post.title.contains(search)) \
+    # .limit(limit).offset(skip).all()
+
+    # By default joins in sqlalchemy is a LEFT INNER JOIN
+    # That is why we are passing isouter=True to make it a LEFT OUTER JOIN
+    results = db.query(
+        models.Post,
+        func.count(models.Vote.post_id).label("votes")
+    ).join(
+        models.Vote,
+        models.Vote.post_id == models.Post.id,
+        isouter=True
+    ).group_by(
+        models.Post.id
+    ).filter(
+        models.Post.title.contains(search)
+    ).limit(limit).offset(skip).all()
+
+    return results
 
 
 @router.post(
@@ -66,7 +84,7 @@ def create_post(
 
 @router.get(
     '/{id}',
-    response_model=schemas.Post
+    response_model=schemas.PostOut
 )
 def get_post(
     id: int,
@@ -86,8 +104,20 @@ def get_post(
     # Plus we are adding a comma after the str(id) because we run into an
     # error later. Don't know the reason for the error yet.
     # post = cursor.fetchone()
+    # post = db.query(models.Post).filter(models.Post.id == id).first()
 
-    post = db.query(models.Post).filter(models.Post.id == id).first()
+    post = db.query(
+        models.Post,
+        func.count(models.Vote.post_id).label("votes")
+    ).join(
+        models.Vote,
+        models.Vote.post_id == models.Post.id,
+        isouter=True
+    ).group_by(
+        models.Post.id
+    ).filter(
+        models.Post.id == id
+    ).first()
 
     if not post:
         raise HTTPException(
