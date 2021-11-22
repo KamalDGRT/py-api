@@ -52,19 +52,19 @@ def get_db():
 # 
 # Looping till we get a connection and breaking out of it
 # once the connection is established.
-while True:
-    try:
-        conn = pg.connect(
-            host='localhost',
-            database='py_api',
-            user='postgres',
-            password='',
-            cursor_factory=RealDictCursor
-        )
-        cursor = conn.cursor()
-        print("Database connection was successfull!")
-        break
-    except Exception as error:
-        print('Connection to the database failed!')
-        print('Error: ', error)
-        time.sleep(2)
+# while True:
+#     try:
+#         conn = pg.connect(
+#             host='localhost',
+#             database='py_api',
+#             user='postgres',
+#             password='',
+#             cursor_factory=RealDictCursor
+#         )
+#         cursor = conn.cursor()
+#         print("Database connection was successfull!")
+#         break
+#     except Exception as error:
+#         print('Connection to the database failed!')
+#         print('Error: ', error)
+#         time.sleep(2)
