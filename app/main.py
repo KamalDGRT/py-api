@@ -11,7 +11,15 @@ from .routers import post, user, auth, vote
 
 # models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
+app = FastAPI(
+    title="RKS Media PyAPI",
+    description="A simple API for a social Media Application",
+    version="0.0.1",
+    contact={
+        "name": "Kamal",
+        "url": "https://github.com/KamalDGRT"
+    }
+)
 
 origins = ["*"]
 
