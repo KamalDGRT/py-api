@@ -199,7 +199,10 @@ def update_post(
             detail=f"Not Authorized to perform requested action!"
         )
 
-    post_query.update(updated_post.dict(), synchronize_session=False)
+    post_query.update(
+        updated_post.dict(),
+        synchronize_session=False
+    )
     db.commit()
 
     # Sending the updated post back to the user

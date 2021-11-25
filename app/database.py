@@ -21,7 +21,11 @@ SQLALCHEMY_DATABASE_URL =  f'postgresql://{settings.database_username}:{settings
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
 # When you talk to a SQL database we need to make use of session
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
 
 # Models that represent table extend the Base class.
 Base = declarative_base()
